@@ -1,17 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import BookCard from './BookCard';
+import PerformanceMetrics from './PerformanceMetrics';
 
-function BooksList({ booksPromise, filter, onSelectBook }) {
-  const navigate = useNavigate();
+function useBooks(filter, sortBy) {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [performanceData, setPerformanceData] = useState(null);
   
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const data = await booksPromise;
-        setBooks(data);
+        const params = new URLSearchParams();
+        if (filter) params.append('genre', filter);
+        if (sortBy) params.append('sort', sortBy);
+        
+        const url = `/api/books${params.toString() ? `?${params.toString()}` : ''}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`API returned status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.books?.length) {
+          console.error("No books data found:", data);
+          setBooks([]);
+        } else {
+          setBooks(data.books);
+          setPerformanceData(data.performance || null);
+        }
       } catch (error) {
         console.error("Error loading books:", error);
       } finally {
@@ -20,17 +39,23 @@ function BooksList({ booksPromise, filter, onSelectBook }) {
     };
     
     fetchBooks();
-  }, [booksPromise]);
+  }, [filter, sortBy]);
   
-  // No genre transformation needed, just filter books by the selected genre
-  const filteredBooks = filter
-    ? books.filter(book => book.genre === filter)
-    : books;
+  return { books, loading, performanceData };
+}
+
+function BooksList({ filter, onSelectBook }) {
+  const navigate = useNavigate();
+  const [sortBy, setSortBy] = useState('');
+  const { books, loading, performanceData } = useBooks(filter, sortBy);
   
   const handleBookSelect = (bookId) => {
-    navigate(`/book/${bookId}`);
+    onSelectBook ? onSelectBook(bookId) : navigate(`/book/${bookId}`);
   };
-  
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -40,14 +65,36 @@ function BooksList({ booksPromise, filter, onSelectBook }) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {filteredBooks.map(book => (
-        <BookCard 
-          key={book.id} 
-          book={book} 
-          onClick={() => handleBookSelect(book.id)}
-        />
-      ))}
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <select 
+          className="py-2 px-4 border border-gray-300 rounded-md bg-white"
+          value={sortBy}
+          onChange={handleSortChange}
+        >
+          <option value="">Sort by...</option>
+          <option value="title_asc">Title (A-Z)</option>
+          <option value="title_desc">Title (Z-A)</option>
+          <option value="author_asc">Author (A-Z)</option>
+          <option value="author_desc">Author (Z-A)</option>
+        </select>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {books.map(book => (
+          <BookCard 
+            key={book.id} 
+            book={book} 
+            onClick={() => handleBookSelect(book.id)}
+          />
+        ))}
+      </div>
+      
+      {performanceData && (
+        <div className="mt-10">
+          <PerformanceMetrics performance={performanceData} />
+        </div>
+      )}
     </div>
   );
 }

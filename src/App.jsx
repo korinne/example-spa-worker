@@ -19,23 +19,24 @@ function App() {
   const { genreId } = params;
   const activeGenre = genreId ? decodeURIComponent(genreId) : null;
   
-  // Main books list promise
-  const booksPromise = useMemo(() => 
-    fetch("/api/data").then(response => {
-      if (!response.ok) {
-        throw new Error(`API returned status: ${response.status}`);
-      }
-      return response.json();
-    }),
-  []);
-  
-  // Calculate genres when books are loaded and combine Science Fiction & Fantasy
+  // Load genres for sidebar
   useEffect(() => {
     const loadGenres = async () => {
       try {
-        const books = await booksPromise;
+        const response = await fetch("/api/books");
+        if (!response.ok) {
+          throw new Error(`API returned status: ${response.status}`);
+        }
+        const data = await response.json();
         
-        const genreGroups = groupByGenre(books);
+        if (!data.books?.length) {
+          console.error("No books data found:", typeof data);
+          return;
+        }
+        
+        const booksArray = data.books;
+        
+        const genreGroups = groupByGenre(booksArray);
         setGenres(genreGroups);
       } catch (error) {
         console.error("Error loading genres:", error);
@@ -43,7 +44,7 @@ function App() {
     };
     
     loadGenres();
-  }, [booksPromise]);
+  }, []);
   
   // Load book details when a book is selected via URL
   useEffect(() => {
@@ -52,21 +53,51 @@ function App() {
     const fetchBookDetail = async () => {
       setLoading(true);
       try {
-        const startTime = performance.now();
-        const response = await fetch(`/api/books/${bookId}`);
-        const endTime = performance.now();
+        // First get basic book details
+        const bookResponse = await fetch(`/api/books/${bookId}`);
         
-        if (!response.ok) {
-          throw new Error(`API returned status: ${response.status}`);
+        if (!bookResponse.ok) {
+          throw new Error(`API returned status: ${bookResponse.status}`);
         }
         
-        const data = await response.json();
+        const bookData = await bookResponse.json();
         
-        // No need for genre transformation, it's now handled in the database
+        // Then get related books data
+        const relatedResponse = await fetch(`/api/books/${bookId}/related`);
         
-        // Add response time to the performance metrics
-        data.performance.responseTime = Math.round(endTime - startTime);
-        setBookDetail(data);
+        if (!relatedResponse.ok) {
+          throw new Error(`API returned status: ${relatedResponse.status}`);
+        }
+        
+        const relatedData = await relatedResponse.json();
+        
+        // Combine the data
+        const combinedData = {
+          book: bookData.book,
+          relatedBooks: relatedData.relatedBooks,
+          recentRecommendations: relatedData.recentRecommendations,
+          genreStats: relatedData.genreStats,
+          performance: {
+            totalQueries: 
+              (bookData.performance?.totalQueries || 0) +
+              (relatedData.performance?.totalQueries || 0),
+            totalDbTime: 
+              (bookData.performance?.totalDbTime || 0) +
+              (relatedData.performance?.totalDbTime || 0),
+            responseTime: 
+              (bookData.performance?.responseTime || 0) +
+              (relatedData.performance?.responseTime || 0),
+            queryDetails: [
+              ...(bookData.performance?.queryDetails || []),
+              ...(relatedData.performance?.queryDetails || [])
+            ],
+            // Use descriptions from the API response
+            description: relatedData.performance?.description || bookData.performance?.description,
+            hyperdriveBenefit: relatedData.performance?.hyperdriveBenefit || bookData.performance?.hyperdriveBenefit
+          }
+        };
+        
+        setBookDetail(combinedData);
       } catch (error) {
         console.error("Error fetching book details:", error);
       } finally {
@@ -139,7 +170,6 @@ function App() {
           )
         ) : (
           <BooksList 
-            booksPromise={booksPromise} 
             onSelectBook={handleSelectBook}
             filter={activeGenre}
           />
