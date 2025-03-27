@@ -6,7 +6,6 @@ import Sidebar from "./components/Sidebar";
 import BooksList from "./components/BooksList";
 import BookDetail from "./components/BookDetail";
 
-// Main App component
 function App() {
   const navigate = useNavigate();
   const params = useParams();
@@ -76,25 +75,7 @@ function App() {
           book: bookData.book,
           relatedBooks: relatedData.relatedBooks,
           recentRecommendations: relatedData.recentRecommendations,
-          genreStats: relatedData.genreStats,
-          performance: {
-            totalQueries: 
-              (bookData.performance?.totalQueries || 0) +
-              (relatedData.performance?.totalQueries || 0),
-            totalDbTime: 
-              (bookData.performance?.totalDbTime || 0) +
-              (relatedData.performance?.totalDbTime || 0),
-            responseTime: 
-              (bookData.performance?.responseTime || 0) +
-              (relatedData.performance?.responseTime || 0),
-            queryDetails: [
-              ...(bookData.performance?.queryDetails || []),
-              ...(relatedData.performance?.queryDetails || [])
-            ],
-            // Use descriptions from the API response
-            description: relatedData.performance?.description || bookData.performance?.description,
-            hyperdriveBenefit: relatedData.performance?.hyperdriveBenefit || bookData.performance?.hyperdriveBenefit
-          }
+          genreStats: relatedData.genreStats
         };
         
         setBookDetail(combinedData);

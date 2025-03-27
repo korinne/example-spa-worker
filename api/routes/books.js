@@ -6,12 +6,8 @@ const booksRouter = new Hono();
 // Books list endpoint with filtering and sorting
 booksRouter.get("/", async (c) => {
   const sql = c.env.SQL;
-  const requestStartTime = Date.now();
 
   try {
-    // Start timing our database operations
-    const dbStartTime = Date.now();
-    let queryTimes = [];
 
     const { genre, sort } = c.req.query();
     let query = sql`SELECT * FROM public.books`;
@@ -50,30 +46,12 @@ booksRouter.get("/", async (c) => {
       }
     }
     
-    // Execute query and measure time
-    const queryStart = Date.now();
+    // Execute query
     const results = await query;
-    const queryEnd = Date.now();
-    queryTimes.push({ query: "List books", time: queryEnd - queryStart });
     
-    // Calculate database time
-    const dbEndTime = Date.now();
-    const totalDbTime = dbEndTime - dbStartTime;
-    
-    // Calculate total response time (includes server processing)
-    const responseTime = Date.now() - requestStartTime;
-    
-    // Wrap results with performance data
+    // Return results
     return Response.json({
-      books: results,
-      performance: {
-        totalQueries: 1,
-        totalDbTime: totalDbTime,
-        responseTime: responseTime,
-        queryDetails: queryTimes,
-        description: "Using Hyperdrive to fetch and filter books",
-        hyperdriveBenefit: "Hyperdrive maintains an optimized connection pool, providing low-latency database access"
-      }
+      books: results
     });
   } catch (e) {
     console.error("API Error:", e);
@@ -88,40 +66,17 @@ booksRouter.get("/", async (c) => {
 booksRouter.get("/:id", async (c) => {
   const bookId = c.req.param("id");
   const sql = c.env.SQL;
-  const requestStartTime = Date.now();
 
   try {
-    // Start timing our database operations
-    const dbStartTime = Date.now();
-    let queryTimes = [];
-    
     // Get the specific book by ID
-    const queryStart = Date.now();
     const book = await sql`SELECT * FROM public.books WHERE id = ${bookId}`;
-    const queryEnd = Date.now();
-    queryTimes.push({ query: "Get book details", time: queryEnd - queryStart });
     
     if (book.length === 0) {
       return Response.json({ error: "Book not found" }, { status: 404 });
     }
-    
-    // Calculate database operation time
-    const dbEndTime = Date.now();
-    const totalDbTime = dbEndTime - dbStartTime;
-    
-    // Calculate total response time (includes server processing)
-    const responseTime = Date.now() - requestStartTime;
 
     return Response.json({
-      book: book[0],
-      performance: {
-        totalQueries: 1,
-        totalDbTime: totalDbTime,
-        responseTime: responseTime,
-        queryDetails: queryTimes,
-        description: "Using Hyperdrive to fetch book details",
-        hyperdriveBenefit: "Hyperdrive maintains an optimized connection pool, providing low-latency database access"
-      }
+      book: book[0]
     });
   } catch (e) {
     console.error(e);

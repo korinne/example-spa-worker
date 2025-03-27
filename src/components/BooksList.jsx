@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import BookCard from './BookCard';
-import PerformanceMetrics from './PerformanceMetrics';
 
 function useBooks(filter, sortBy) {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [performanceData, setPerformanceData] = useState(null);
   
   useEffect(() => {
     const fetchBooks = async () => {
@@ -29,7 +27,6 @@ function useBooks(filter, sortBy) {
           setBooks([]);
         } else {
           setBooks(data.books);
-          setPerformanceData(data.performance || null);
         }
       } catch (error) {
         console.error("Error loading books:", error);
@@ -41,13 +38,13 @@ function useBooks(filter, sortBy) {
     fetchBooks();
   }, [filter, sortBy]);
   
-  return { books, loading, performanceData };
+  return { books, loading };
 }
 
 function BooksList({ filter, onSelectBook }) {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState('');
-  const { books, loading, performanceData } = useBooks(filter, sortBy);
+  const { books, loading } = useBooks(filter, sortBy);
   
   const handleBookSelect = (bookId) => {
     onSelectBook ? onSelectBook(bookId) : navigate(`/book/${bookId}`);
@@ -89,12 +86,6 @@ function BooksList({ filter, onSelectBook }) {
           />
         ))}
       </div>
-      
-      {performanceData && (
-        <div className="mt-10">
-          <PerformanceMetrics performance={performanceData} />
-        </div>
-      )}
     </div>
   );
 }

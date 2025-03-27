@@ -1,12 +1,10 @@
 import { useNavigate } from 'react-router';
 import Breadcrumbs from './Breadcrumbs';
-import PerformanceMetrics from './PerformanceMetrics';
 
 function BookDetail({ bookData }) {
   const navigate = useNavigate();
-  const { book, relatedBooks, performance } = bookData;
+  const { book, relatedBooks } = bookData;
   
-  // Prepare breadcrumb items
   const breadcrumbItems = [
     { label: 'All Books', value: null },
   ];
@@ -19,10 +17,8 @@ function BookDetail({ bookData }) {
   
   const handleNavigate = (value) => {
     if (value === null) {
-      // Navigate to all books
       navigate('/');
     } else if (value !== 'book') {
-      // Navigate to genre
       navigate(`/genre/${encodeURIComponent(value)}`);
     }
   };
@@ -33,7 +29,6 @@ function BookDetail({ bookData }) {
   
   return (
     <div>
-      {/* Breadcrumbs at the very top */}
       <Breadcrumbs 
         items={breadcrumbItems} 
         onNavigate={handleNavigate} 
@@ -68,9 +63,6 @@ function BookDetail({ bookData }) {
             </div>
           </div>
         </div>
-        
-        {/* Performance metrics section */}
-        <PerformanceMetrics performance={performance} />
         
         {/* Other books in this genre - combined section */}
         {relatedBooks.length > 0 && (
