@@ -7,7 +7,7 @@
   "name": "example-spa-worker-hyperdrive",
   "main": "api/index.js",
   "compatibility_flags": ["nodejs_compat"],
-  "compatibility_date": "2025-02-24",
+  "compatibility_date": "2025-02-14",
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
@@ -19,7 +19,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "4caf5a303eb148f0a041412b5e1e3033",
+      "id": "d9c9cfb2587f44ee9b0730baa692ffec",
       "localConnectionString": "postgresql://myuser:mypassword@localhost:5432/mydatabase"
     }
   ],
