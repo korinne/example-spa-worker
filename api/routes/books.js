@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { handleDataFetching } from "../lib/utils.js";
+import { selectDataSource, booksMockUtils } from "../lib/utils.js";
 
 // Create books router
 const booksRouter = new Hono();
@@ -8,40 +8,9 @@ const booksRouter = new Hono();
 booksRouter.get("/", async (c) => {
   const { genre, sort } = c.req.query();
   
-  // Mock data logic
+  // Use imported mock logic
   const mockLogic = async (c) => {
-    let results = [...c.env.MOCK_DATA];
-    
-    // Apply genre filter if provided
-    if (genre) {
-      results = results.filter(book => book.genre === genre);
-    }
-    
-    // Apply sorting if provided
-    if (sort) {
-      switch (sort) {
-        case 'title_asc':
-          results.sort((a, b) => a.title.localeCompare(b.title));
-          break;
-        case 'title_desc':
-          results.sort((a, b) => b.title.localeCompare(a.title));
-          break;
-        case 'author_asc':
-          results.sort((a, b) => a.author.localeCompare(b.author));
-          break;
-        case 'author_desc':
-          results.sort((a, b) => b.author.localeCompare(a.author));
-          break;
-        default:
-          // Default sort, no change needed
-          break;
-      }
-    }
-    
-    return Response.json({
-      books: results,
-      source: "mock"
-    });
+    return booksMockUtils.getBooksList(c, genre, sort);
   };
   
   // Database logic
@@ -93,26 +62,16 @@ booksRouter.get("/", async (c) => {
     });
   };
   
-  return handleDataFetching(c, dbLogic, mockLogic);
+  return selectDataSource(c, dbLogic, mockLogic);
 });
 
 // Book details endpoint
 booksRouter.get("/:id", async (c) => {
   const bookId = c.req.param("id");
   
-  // Mock data logic
+  // Use imported mock logic
   const mockLogic = async (c) => {
-    const bookIdNum = parseInt(bookId, 10);
-    const book = c.env.MOCK_DATA.find(book => book.id === bookIdNum);
-    
-    if (!book) {
-      return Response.json({ error: "Book not found" }, { status: 404 });
-    }
-
-    return Response.json({
-      book,
-      source: "mock"
-    });
+    return booksMockUtils.getBookDetail(c, bookId);
   };
   
   // Database logic
@@ -132,7 +91,7 @@ booksRouter.get("/:id", async (c) => {
     });
   };
   
-  return handleDataFetching(c, dbLogic, mockLogic);
+  return selectDataSource(c, dbLogic, mockLogic);
 });
 
 export default booksRouter;

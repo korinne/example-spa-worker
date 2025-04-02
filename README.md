@@ -134,7 +134,7 @@ When developing locally with Hyperdrive, you **must** use the Docker setup provi
 4. **Connection reliability**: The Docker setup guarantees consistent connection behavior between your local Wrangler environment and the database
 5. **Development/production parity**: Using Docker ensures your local development closely resembles the production environment
 
-This approach is the recommended and supported method for local development with this application. Attempting to use a remote database for local development with Hyperdrive is not currently supported.
+This approach is the recommended and supported method for local development with this application. Attempting to use a remote database for local development with Hyperdrive is not currently supported, but is being worked on.
 
 ## Resources
 
