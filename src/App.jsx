@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { groupByGenre } from "./lib/utils";
 import Breadcrumbs from "./components/Breadcrumbs";
 import Sidebar from "./components/Sidebar";
 import BooksList from "./components/BooksList";
 import BookDetail from "./components/BookDetail";
+import MockDataBanner from "./components/MockDataBanner";
 
 function App() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ function App() {
   const [bookDetail, setBookDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [genres, setGenres] = useState([]);
+  const [dataSource, setDataSource] = useState(null);
   
   // Get route parameters
   const { bookId } = params;
@@ -34,6 +36,11 @@ function App() {
         }
         
         const booksArray = data.books;
+        
+        // Check if using mock data or database
+        if (data.source) {
+          setDataSource(data.source);
+        }
         
         const genreGroups = groupByGenre(booksArray);
         setGenres(genreGroups);
@@ -135,6 +142,9 @@ function App() {
               ? `Explore our collection of ${activeGenre.toLowerCase()} books` 
               : 'Discover your next favorite book'}
           </p>
+          
+          {/* Show banner only when using mock data */}
+          {dataSource === "mock" && <MockDataBanner />}
         </div>
 
         {bookId ? (

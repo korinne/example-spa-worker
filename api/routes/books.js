@@ -5,11 +5,47 @@ const booksRouter = new Hono();
 
 // Books list endpoint with filtering and sorting
 booksRouter.get("/", async (c) => {
-  const sql = c.env.SQL;
-
   try {
-
     const { genre, sort } = c.req.query();
+
+    // Use mock data if database is not available
+    if (!c.env.DB_AVAILABLE) {
+      let results = [...c.env.MOCK_DATA];
+      
+      // Apply genre filter if provided
+      if (genre) {
+        results = results.filter(book => book.genre === genre);
+      }
+      
+      // Apply sorting if provided
+      if (sort) {
+        switch (sort) {
+          case 'title_asc':
+            results.sort((a, b) => a.title.localeCompare(b.title));
+            break;
+          case 'title_desc':
+            results.sort((a, b) => b.title.localeCompare(a.title));
+            break;
+          case 'author_asc':
+            results.sort((a, b) => a.author.localeCompare(b.author));
+            break;
+          case 'author_desc':
+            results.sort((a, b) => b.author.localeCompare(a.author));
+            break;
+          default:
+            // Default sort, no change needed
+            break;
+        }
+      }
+      
+      return Response.json({
+        books: results,
+        source: "mock"
+      });
+    }
+    
+    // Use database if available
+    const sql = c.env.SQL;
     let query = sql`SELECT * FROM public.books`;
     
     // Apply genre filter if provided
@@ -51,7 +87,8 @@ booksRouter.get("/", async (c) => {
     
     // Return results
     return Response.json({
-      books: results
+      books: results,
+      source: "database"
     });
   } catch (e) {
     console.error("API Error:", e);
@@ -65,9 +102,26 @@ booksRouter.get("/", async (c) => {
 // Book details endpoint
 booksRouter.get("/:id", async (c) => {
   const bookId = c.req.param("id");
-  const sql = c.env.SQL;
-
+  
   try {
+    // Use mock data if database is not available
+    if (!c.env.DB_AVAILABLE) {
+      const bookIdNum = parseInt(bookId, 10);
+      const book = c.env.MOCK_DATA.find(book => book.id === bookIdNum);
+      
+      if (!book) {
+        return Response.json({ error: "Book not found" }, { status: 404 });
+      }
+
+      return Response.json({
+        book,
+        source: "mock"
+      });
+    }
+    
+    // Use database if available
+    const sql = c.env.SQL;
+    
     // Get the specific book by ID
     const book = await sql`SELECT * FROM public.books WHERE id = ${bookId}`;
     
@@ -76,7 +130,8 @@ booksRouter.get("/:id", async (c) => {
     }
 
     return Response.json({
-      book: book[0]
+      book: book[0],
+      source: "database"
     });
   } catch (e) {
     console.error(e);
