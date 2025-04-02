@@ -1,50 +1,51 @@
 import { Hono } from "hono";
+import { handleDataFetching } from "../lib/utils.js";
 
 // Create books router
 const booksRouter = new Hono();
 
 // Books list endpoint with filtering and sorting
 booksRouter.get("/", async (c) => {
-  try {
-    const { genre, sort } = c.req.query();
-
-    // Use mock data if database is not available
-    if (!c.env.DB_AVAILABLE) {
-      let results = [...c.env.MOCK_DATA];
-      
-      // Apply genre filter if provided
-      if (genre) {
-        results = results.filter(book => book.genre === genre);
-      }
-      
-      // Apply sorting if provided
-      if (sort) {
-        switch (sort) {
-          case 'title_asc':
-            results.sort((a, b) => a.title.localeCompare(b.title));
-            break;
-          case 'title_desc':
-            results.sort((a, b) => b.title.localeCompare(a.title));
-            break;
-          case 'author_asc':
-            results.sort((a, b) => a.author.localeCompare(b.author));
-            break;
-          case 'author_desc':
-            results.sort((a, b) => b.author.localeCompare(a.author));
-            break;
-          default:
-            // Default sort, no change needed
-            break;
-        }
-      }
-      
-      return Response.json({
-        books: results,
-        source: "mock"
-      });
+  const { genre, sort } = c.req.query();
+  
+  // Mock data logic
+  const mockLogic = async (c) => {
+    let results = [...c.env.MOCK_DATA];
+    
+    // Apply genre filter if provided
+    if (genre) {
+      results = results.filter(book => book.genre === genre);
     }
     
-    // Use database if available
+    // Apply sorting if provided
+    if (sort) {
+      switch (sort) {
+        case 'title_asc':
+          results.sort((a, b) => a.title.localeCompare(b.title));
+          break;
+        case 'title_desc':
+          results.sort((a, b) => b.title.localeCompare(a.title));
+          break;
+        case 'author_asc':
+          results.sort((a, b) => a.author.localeCompare(b.author));
+          break;
+        case 'author_desc':
+          results.sort((a, b) => b.author.localeCompare(a.author));
+          break;
+        default:
+          // Default sort, no change needed
+          break;
+      }
+    }
+    
+    return Response.json({
+      books: results,
+      source: "mock"
+    });
+  };
+  
+  // Database logic
+  const dbLogic = async (c) => {
     const sql = c.env.SQL;
     let query = sql`SELECT * FROM public.books`;
     
@@ -90,36 +91,32 @@ booksRouter.get("/", async (c) => {
       books: results,
       source: "database"
     });
-  } catch (e) {
-    console.error("API Error:", e);
-    return Response.json(
-      { error: e instanceof Error ? e.message : e },
-      { status: 500 }
-    );
-  }
+  };
+  
+  return handleDataFetching(c, dbLogic, mockLogic);
 });
 
 // Book details endpoint
 booksRouter.get("/:id", async (c) => {
   const bookId = c.req.param("id");
   
-  try {
-    // Use mock data if database is not available
-    if (!c.env.DB_AVAILABLE) {
-      const bookIdNum = parseInt(bookId, 10);
-      const book = c.env.MOCK_DATA.find(book => book.id === bookIdNum);
-      
-      if (!book) {
-        return Response.json({ error: "Book not found" }, { status: 404 });
-      }
-
-      return Response.json({
-        book,
-        source: "mock"
-      });
-    }
+  // Mock data logic
+  const mockLogic = async (c) => {
+    const bookIdNum = parseInt(bookId, 10);
+    const book = c.env.MOCK_DATA.find(book => book.id === bookIdNum);
     
-    // Use database if available
+    if (!book) {
+      return Response.json({ error: "Book not found" }, { status: 404 });
+    }
+
+    return Response.json({
+      book,
+      source: "mock"
+    });
+  };
+  
+  // Database logic
+  const dbLogic = async (c) => {
     const sql = c.env.SQL;
     
     // Get the specific book by ID
@@ -133,13 +130,9 @@ booksRouter.get("/:id", async (c) => {
       book: book[0],
       source: "database"
     });
-  } catch (e) {
-    console.error(e);
-    return Response.json(
-      { error: e instanceof Error ? e.message : e },
-      { status: 500 }
-    );
-  }
+  };
+  
+  return handleDataFetching(c, dbLogic, mockLogic);
 });
 
 export default booksRouter;
