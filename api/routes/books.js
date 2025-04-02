@@ -1,15 +1,21 @@
 import { Hono } from "hono";
+import { selectDataSource, booksMockUtils } from "../lib/utils.js";
 
 // Create books router
 const booksRouter = new Hono();
 
 // Books list endpoint with filtering and sorting
 booksRouter.get("/", async (c) => {
-  const sql = c.env.SQL;
-
-  try {
-
-    const { genre, sort } = c.req.query();
+  const { genre, sort } = c.req.query();
+  
+  // Use imported mock logic
+  const mockLogic = async (c) => {
+    return booksMockUtils.getBooksList(c, genre, sort);
+  };
+  
+  // Database logic
+  const dbLogic = async (c) => {
+    const sql = c.env.SQL;
     let query = sql`SELECT * FROM public.books`;
     
     // Apply genre filter if provided
@@ -51,23 +57,27 @@ booksRouter.get("/", async (c) => {
     
     // Return results
     return Response.json({
-      books: results
+      books: results,
+      source: "database"
     });
-  } catch (e) {
-    console.error("API Error:", e);
-    return Response.json(
-      { error: e instanceof Error ? e.message : e },
-      { status: 500 }
-    );
-  }
+  };
+  
+  return selectDataSource(c, dbLogic, mockLogic);
 });
 
 // Book details endpoint
 booksRouter.get("/:id", async (c) => {
   const bookId = c.req.param("id");
-  const sql = c.env.SQL;
-
-  try {
+  
+  // Use imported mock logic
+  const mockLogic = async (c) => {
+    return booksMockUtils.getBookDetail(c, bookId);
+  };
+  
+  // Database logic
+  const dbLogic = async (c) => {
+    const sql = c.env.SQL;
+    
     // Get the specific book by ID
     const book = await sql`SELECT * FROM public.books WHERE id = ${bookId}`;
     
@@ -76,15 +86,12 @@ booksRouter.get("/:id", async (c) => {
     }
 
     return Response.json({
-      book: book[0]
+      book: book[0],
+      source: "database"
     });
-  } catch (e) {
-    console.error(e);
-    return Response.json(
-      { error: e instanceof Error ? e.message : e },
-      { status: 500 }
-    );
-  }
+  };
+  
+  return selectDataSource(c, dbLogic, mockLogic);
 });
 
 export default booksRouter;
