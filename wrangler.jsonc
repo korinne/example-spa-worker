@@ -4,10 +4,10 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "example-spa-worker-hyperdrive",
+  "name": "react-postgres-fullstack-template",
   "main": "api/index.js",
   "compatibility_flags": ["nodejs_compat"],
-  "compatibility_date": "2025-02-14",
+  "compatibility_date": "2025-04-01",
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
