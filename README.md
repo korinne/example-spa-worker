@@ -1,26 +1,44 @@
-# React + Vite + Hyperdrive on Cloudflare Workers
+# React + Vite + PostgreSQL + Hyperdrive on Cloudflare Workers
 
-This project demonstrates a full-stack application with a React Single Page Application frontend, served as static assets through Cloudflare Workers. The backend
+This project demonstrates a full-stack application with a React single-page application frontend, served as static assets through Cloudflare Workers. The backend
 consists of API routes built with Hono, running on Cloudflare Workers, connecting to a PostgreSQL database through Hyperdrive. Smart Placement is enabled to
 automatically position your Worker closer to your database for reduced latency.
 
-## Architecture Overview
+## Architecture Overview & Key Files
 
-This application demonstrates a full-stack architecture using Cloudflare Workers:
+This application demonstrates a full-stack architecture using Cloudflare Workers, with the following structure:
 
-- **Frontend**: React SPA with React Router for client-side navigation ([using declarative routing(https://reactrouter.com/start/declarative/installation)])
+- **Frontend**: React SPA with React Router for client-side navigation ([using declarative routing](https://reactrouter.com/en/main/start/overview))
   - Built with Vite and deployed as static assets via Workers
-  - Single Page Application (SPA) mode enabled in `wrangler.jsonc` for client-side navigation
+  - single-page application (SPA) mode enabled in `wrangler.jsonc` for client-side navigation
+  - Key files:
+    - `src/App.jsx` - Main application component and routing setup
+    - `src/components/` - React components for UI elements
+    - `src/lib/utils.js` - Frontend utility functions
+    - `index.html` - HTML entry point
+    - `vite.config.js` - Vite configuration
+
 - **Backend**: API routes served by a Worker using Hono framework
   - API endpoints defined in `/api/routes` directory
   - Automatic fallback to mock data when database is unavailable
+  - Key files:
+    - `api/index.js` - API entry point handling all routes
+    - `api/routes/books.js` - Main book listing endpoints
+    - `api/routes/book-related.js` - Related book information endpoints
+    - `api/lib/mockData.js` - Fallback data when database is unavailable
+    - `api/lib/utils.js` - Backend utility functions
+
 - **Database**: PostgreSQL database connected via Cloudflare Hyperdrive
   - Smart Placement enabled for optimal performance
   - Graceful handling of missing connection strings or connection failures
+  - Key files:
+    - `wrangler.jsonc` - Cloudflare Workers configuration (including Hyperdrive setup)
+    - `init.sql` - Database schema and sample data
+    - `docker-compose.yml` - Local development environment setup
 
 ## Smart Placement Benefits
 
-This application uses Cloudflare Workers' [Smart Placement(https://developers.cloudflare.com/workers/configuration/smart-placement/)] feature to optimize performance:
+This application uses Cloudflare Workers' [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement/) feature to optimize performance:
 
 - **What is Smart Placement?** Smart Placement dynamically positions your Worker in Cloudflare's network to minimize latency between your Worker and database.
 
@@ -34,7 +52,7 @@ This application uses Cloudflare Workers' [Smart Placement(https://developers.cl
 
 This application uses two main rendering modes:
 
-1. **Single-Page Application (SPA)**: The entire application is rendered client-side using React Router, with assets served by Cloudflare Workers.
+1. **Single-page application (SPA)**: The entire application is rendered client-side using React Router, with assets served by Cloudflare Workers.
 
 2. **API-driven data fetching**: Backend data is retrieved from API endpoints that connect to either:
    - A real PostgreSQL database via Hyperdrive (production mode)

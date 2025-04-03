@@ -1,5 +1,5 @@
 {
-  "name": "example-spa-worker-hyperdrive",
+  "name": "react-postgres-fullstack-template",
   "private": true,
   "version": "0.0.0",
   "type": "module",
