@@ -1,7 +1,7 @@
 # React + Vite + PostgreSQL + Hyperdrive on Cloudflare Workers
 
-This project demonstrates a full-stack application with a React single-page application frontend, served as static assets through Cloudflare Workers. The backend
-consists of API routes built with Hono, running on Cloudflare Workers, connecting to a PostgreSQL database through Hyperdrive. Smart Placement is enabled to
+This project demonstrates a full-stack application with a React single-page application frontend, served as [static assets through Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/). The backend
+consists of API routes built with Hono, running on Cloudflare Workers, connecting to a PostgreSQL database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/). [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement/) is enabled to
 automatically position your Worker closer to your database for reduced latency.
 
 ## Architecture Overview & Key Files
@@ -40,7 +40,7 @@ This application demonstrates a full-stack architecture using Cloudflare Workers
 
 This application uses Cloudflare Workers' [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement/) feature to optimize performance:
 
-- **What is Smart Placement?** Smart Placement dynamically positions your Worker in Cloudflare's network to minimize latency between your Worker and database.
+- **What is Smart Placement?** Smart Placement [can dynamically position](https://developers.cloudflare.com/workers/configuration/smart-placement/#understand-how-smart-placement-works) your Worker in Cloudflare's network to minimize latency between your Worker and database.
 
 - **Why it's enabled in this app:** The application makes multiple database round trips per request. Smart Placement analyzes this traffic pattern and can choose to position the Worker and Hyperdrive closer to your deployed database to reduce latency.
 
@@ -96,7 +96,7 @@ This application can be deployed in two ways:
 
 ## Setting Up Hyperdrive Bindings
 
-Hyperdrive is Cloudflare's database connector that provides optimized connections between your Workers and various database providers. Here's a detailed explanation of how to set it up:
+Hyperdrive is Cloudflare's database connector that provides optimized connections between your Workers and various database providers. Here's a detailed explanation of how to set it up (or you can read more in [documentation](https://developers.cloudflare.com/hyperdrive/configuration/connect-to-postgres/):
 
 1. **Create a Hyperdrive configuration**:
 
@@ -146,11 +146,9 @@ If you update the "init.sql" file, make sure to run `docker-compose down -v` to 
 
 When developing locally with Hyperdrive, you **must** use the Docker setup provided:
 
-1. **Local connection requirements**: Hyperdrive's local development mode requires a database running on localhost with the exact configuration specified in `localConnectionString`
-2. **Compatibility**: The Docker setup ensures the PostgreSQL instance is properly configured to work with the local Hyperdrive development environment
-3. **Automatic configuration**: The container automatically runs the init.sql script to create tables and load sample data
-4. **Connection reliability**: The Docker setup guarantees consistent connection behavior between your local Wrangler environment and the database
-5. **Development/production parity**: Using Docker ensures your local development closely resembles the production environment
+- **Local connection requirements**: Hyperdrive's local development mode requires a database running on localhost with the exact configuration specified in `localConnectionString`.
+- **Compatibility**: The Docker setup ensures the PostgreSQL instance is properly configured to work with the local Hyperdrive development environment.
+- **Automatic configuration**: The container automatically runs the init.sql script to create tables and load sample data.
 
 This approach is the recommended and supported method for local development with this application. Attempting to use a remote database for local development with Hyperdrive is not currently supported, but is being worked on.
 
